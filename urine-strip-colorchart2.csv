@@ -1,0 +1,55 @@
+Column 1,filename,R,G,B,range,value
+Leukocytes,Leukocytes_0.png,181,164,122,0.01,0 cells/µl
+Leukocytes,Leukocytes_15.png,177,158,138,0.01,15 cells/µl
+Leukocytes,Leukocytes_70.png,169,151,145,0.01,70 cells/µl
+Leukocytes,Leukocytes_125.png,143,122,136,0.01,125 cells/µl
+Leukocytes,Leukocytes_500.png,128,108,134,0.01,500 cells/µl
+Nitrite,Nitrite_0.png,181,165,140,0.01,no
+Nitrite,Nitrite_1.png,178,158,152,0.01,yes
+Nitrite,Nitrite_2.png,184,143,139,0.01,yes
+Urobilinogen,Urobilinogen_3.2.png,175,129,102,0.01,3.2 µmol/l
+Urobilinogen,Urobilinogen_16.png,171,105,86,0.01,16 µmol/l
+Urobilinogen,Urobilinogen_32.png,173,96,100,0.01,32 µmol/l
+Urobilinogen,Urobilinogen_64.png,166,85,97,0.01,64 µmol/l
+Urobilinogen,Urobilinogen_128.png,171,77,103,0.01,128 µmol/l
+Protein,Protein_0.png,174,152,53,0.01,0 g/l
+Protein,Protein_0.1.png,148,138,67,0.01,0.1 g/l
+Protein,Protein_0.3.png,131,130,64,0.01,0.3 g/l
+Protein,Protein_1.png,116,127,67,0.01,1 g/l
+Protein,Protein_3.png,93,123,86,0.01,3 g/l
+Protein,Protein_20.png,93,124,99,0.01,20 g/l
+pH,pH_5.png,167,99,30,0.01,5 pH
+pH,pH_6.png,169,107,47,0.01,6 pH
+pH,pH_6.5.png,173,122,47,0.01,6.5 pH
+pH,pH_7.png,155,114,24,0.01,7 pH
+pH,pH_7.5.png,129,104,31,0.01,7.5 pH
+pH,pH_8.png,116,101,37,0.01,8 pH
+pH,pH_8.5.png,50,66,65,0.01,8.5 pH
+Blood,Blood_0.png,171,105,27,0.01,0 cells/µl
+Blood,Blood_NH_10.png,163,101,28,0.01,10 cells/µl
+Blood,Blood_H_10.png,140,95,32,0.01,10 cells/µl
+Blood,Blood_H_25.png,109,86,37,0.01,25 cells/µl
+Blood,Blood_H_80.png,69,72,42,0.01,80 cells/µl
+Blood,Blood_H_200.png,39,49,38,0.01,200 cells/µl
+Specific Gravity,Specific Gravity_1.png,31,48,52,0.01,1
+Specific Gravity,Specific Gravity_1.005.png,60,56,45,0.01,1.005
+Specific Gravity,Specific Gravity_1.01.png,71,63,39,0.01,1.01
+Specific Gravity,Specific Gravity_1.015.png,105,80,40,0.01,1.015
+Specific Gravity,Specific Gravity_1.02.png,123,92,41,0.01,1.02
+Specific Gravity,Specific Gravity_1.025.png,139,100,38,0.01,1.025
+Specific Gravity,Specific Gravity_1.03.png,160,115,29,0.01,1.03
+Ketone,Ketone_0.png,167,103,72,0.01,0 mmol/l
+Ketone,Ketone_0.5.png,162,87,65,0.01,0.5 mmol/l
+Ketone,Ketone_1.5.png,158,57,63,0.01,1.5 mmol/l
+Ketone,Ketone_4.0.png,120,34,47,0.01,4 mmol/l
+Ketone,Ketone_8.0.png,79,25,38,0.01,8 mmol/l
+Ketone,Ketone_16.png,60,21,35,0.01,16 mmol/l
+Bilirubin,Bilirubin_0.png,174,148,108,0.01,0 µmol/l
+Bilirubin,Bilirubin_17.png,167,113,67,0.01,17 µmol/l
+Bilirubin,Bilirubin_50.png,151,85,53,0.01,50 µmol/l
+Bilirubin,Bilirubin_100.png,138,65,50,0.01,100 µmol/l
+Calcium,Calcium_1.png,161,123,90,0.01,1 mmol/l
+Calcium,Calcium_2.5.png,165,132,122,0.01,2.5 mmol/l
+Calcium,Calcium_5.png,158,115,115,0.01,5 mmol/l
+Calcium,Calcium_7.5.png,145,98,105,0.01,7.5 mmol/l
+Calcium,Calcium_10.png,117,77,96,0.01,10 mmol/l

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urine Test Strip Analyzer</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Urine Test Strip Analyzer</h1>
+            <p class="subtitle">Upload an image of your urine test strip to analyze 10 parameters</p>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="imageInput" name="file" accept="image/*" required>
+                        <label for="imageInput" class="file-label">
+                            <span class="file-label-text">Choose Image</span>
+                            <span class="file-label-icon">📷</span>
+                        </label>
+                    </div>
+                    <button type="submit" id="submitBtn" class="submit-btn">Analyze Strip</button>
+                </form>
+            </div>
+
+            <div id="loadingIndicator" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Analyzing image...</p>
+            </div>
+
+            <div id="errorMessage" class="error hidden"></div>
+
+            <div id="resultsSection" class="results-section hidden">
+                <h2>Analysis Results</h2>
+                <div class="results-table-wrapper">
+                    <table id="resultsTable" class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Value</th>
+                                <th>Confidence</th>
+                                <th>Delta E</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody">
+                            <!-- Results will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>
+
