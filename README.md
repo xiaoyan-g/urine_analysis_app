@@ -22,9 +22,13 @@ The app analyzes these 10 parameters:
 10. Calcium (mineral balance)
 
 ## How to run
-1. Install Python dependencies: `pip install opencv-python numpy pandas fastapi uvicorn python-multipart`
-2. Run the app: `python app.py`
-3. Open browser to `http://localhost:8000`
+1. Create a virtual environment: `python -m venv venv`
+2. Activate the virtual environment:
+   - Windows: `venv\Scripts\activate`
+   - macOS/Linux: `source venv/bin/activate`
+3. Install dependencies: `pip install -r requirements.txt`
+4. Run the app: `python app.py`
+5. Open browser to `http://localhost:8000`
 
 ## Important Note
 This is for educational purposes only. Not for medical diagnosis.
