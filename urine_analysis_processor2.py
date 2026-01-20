@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import os
+from ultralytics import YOLO
 
 #Configurations n stuff
 PAD_ORDER = [
@@ -29,105 +30,81 @@ CSV_PATH = "urine-strip-colorchart2.csv"
 
 DEBUG_CROP_FOLDER = "parameter_crop" 
 
+#MO
+MODEL = YOLO("models/best.pt")
+
 #1. IMAGE CAPTURE AND STANDARDIZATION
 def preprocess_image(image_path):
+    """Load and return the image without preprocessing."""
     img = cv2.imread(image_path)
     if img is None:
         raise ValueError("Image not loaded")
-
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    h, w = gray.shape
-    corner_pixels = np.concatenate([
-        gray[0:50, 0:50].ravel(),
-        gray[0:50, w-50:w].ravel(),
-        gray[h-50:h, 0:50].ravel(),
-        gray[h-50:h, w-50:w].ravel()
-    ])
-    bg_brightness = np.mean(corner_pixels)
-
-    #white background (> bg_brightness - tolerance)
-    _, thresh = cv2.threshold(gray, int(bg_brightness - 30), 255, cv2.THRESH_BINARY_INV)
-
-    #tallest vertical
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if not contours:
-        raise ValueError("No strip detected")
-
-    candidates = []
-    for cnt in contours:
-        x, y, w_cnt, h_cnt = cv2.boundingRect(cnt)
-        aspect = h_cnt / float(w_cnt) if w_cnt > 0 else 0
-        if aspect > 8 and h_cnt > 0.7 * h:  
-            candidates.append((h_cnt, x, y, w_cnt, h_cnt))
-
-    if not candidates:
-        raise ValueError("No valid strip found")
-
-    _, x, y, w_cnt, h_cnt = max(candidates, key=lambda t: t[0])
-
-    #Crop
-    margin = int(0.05 * w_cnt)
-    cropped = img[max(0, y - margin): y + h_cnt + margin,
-                  max(0, x - margin): x + w_cnt + margin]
-
-    cropped_gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
-    bg_samples = np.mean([
-        cropped_gray[10:60, 10:60],
-        cropped_gray[10:60, -60:-10],
-        cropped_gray[-60:-10, 10:60],
-        cropped_gray[-60:-10, -60:-10]
-    ])
-    scale_factor = 255.0 / (bg_samples + 1e-6)
-    cropped_balanced = np.clip(cropped.astype(np.float32) * scale_factor, 0, 255).astype(np.uint8)
-
-    return cropped_balanced
-
+    return img
 
 #2. DETECTING/ISOLATING EACH TEST PAD
 
+def create_pad_mask(roi):
+    """Create HSV-based mask to isolate colored pad region."""
+    hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+    _, s, v = cv2.split(hsv)
+    
+    # Exclude very light pixels (background) and very dark pixels
+    # Include colored regions (sufficient saturation)
+    mask = (v > 50) & (v < 200) & (s > 30)
+    return (mask * 255).astype(np.uint8)
+
+
 def segment_pads(strip_img):
-    h, w, _ = strip_img.shape
-    pads = []
-
-    for i, start_frac in enumerate(PAD_RELATIVE_STARTS):
-        y_start = int(start_frac * h)
-        y_end = int((start_frac + PAD_HEIGHT_FRACTION) * h)
-        
-        x_start = int(0.15 * w)
-        x_end = int(0.85 * w)
-
-        roi = strip_img[y_start:y_end, x_start:x_end].copy()
-
-        # Convert to LAB
-        lab_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2LAB)
-
-        #exclude near-white and very dark
-        lower = np.array([20, 100, 100], dtype=np.uint8)
-        upper = np.array([255, 200, 200], dtype=np.uint8)
-        mask = cv2.inRange(lab_roi, lower, upper)
-
-        #Morphology on mask
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-
-        #Largest contour
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        if contours:
-            largest = max(contours, key=cv2.contourArea)
-            final_mask = np.zeros(mask.shape, np.uint8)
-            cv2.drawContours(final_mask, [largest], -1, 255, -1)
+    """Detect and isolate test pads using YOLO model."""
+    results = MODEL.predict(
+        source=strip_img,
+        conf=0.35,
+        iou=0.45,
+        imgsz=640,
+        verbose=False
+    )
+    
+    detections = results[0]
+    
+    if len(detections.boxes) == 0:
+        raise ValueError("No test pads detected!")
+    
+    # Extract detections with coordinates and sort by x-position (left to right)
+    pad_detections = []
+    for box in detections.boxes:
+        x1, y1, x2, y2 = map(int, box.xyxy[0])
+        class_id = int(box.cls)
+        if 0 <= class_id < len(PAD_ORDER):
+            parameter = PAD_ORDER[class_id]
         else:
-            final_mask = mask
-
+            parameter = f"unknown_class_{class_id}"
+        pad_detections.append((x1, y1, x2, y2, parameter))
+    
+    # Sort by x-coordinate (left to right)
+    pad_detections.sort(key=lambda d: d[0])
+    
+    # Process each detection: crop, create mask, return formatted dict
+    pads = []
+    for x1, y1, x2, y2, parameter in pad_detections:
+        # Crop the pad ROI
+        roi = strip_img[y1:y2, x1:x2]
+        
+        # Skip invalid crops
+        if roi.size == 0:
+            continue
+        
+        # Create HSV mask
+        mask = create_pad_mask(roi)
+        
         pads.append({
-            "parameter": PAD_ORDER[i],
+            "parameter": parameter,
             "roi": roi,
-            "mask": final_mask,
-            "y_range": (y_start, y_end)
+            "mask": mask
         })
-
+    
+    if not pads:
+        raise ValueError("No valid pad crops created!")
+    
     return pads
 
 
