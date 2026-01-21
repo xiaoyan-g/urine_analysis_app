@@ -30,7 +30,6 @@ CSV_PATH = "urine-strip-colorchart2.csv"
 
 DEBUG_CROP_FOLDER = "parameter_crop" 
 
-#MO
 MODEL = YOLO("models/best.pt")
 
 #1. IMAGE CAPTURE AND STANDARDIZATION
@@ -74,18 +73,20 @@ def segment_pads(strip_img):
     for box in detections.boxes:
         x1, y1, x2, y2 = map(int, box.xyxy[0])
         class_id = int(box.cls)
+        # Extract YOLO confidence score
+        yolo_conf = float(box.conf[0]) if hasattr(box.conf, '__len__') and len(box.conf) > 0 else float(box.conf)
         if 0 <= class_id < len(PAD_ORDER):
             parameter = PAD_ORDER[class_id]
         else:
             parameter = f"unknown_class_{class_id}"
-        pad_detections.append((x1, y1, x2, y2, parameter))
+        pad_detections.append((x1, y1, x2, y2, parameter, yolo_conf))
     
     # Sort by x-coordinate (left to right)
     pad_detections.sort(key=lambda d: d[0])
     
     # Process each detection: crop, create mask, return formatted dict
     pads = []
-    for x1, y1, x2, y2, parameter in pad_detections:
+    for x1, y1, x2, y2, parameter, yolo_conf in pad_detections:
         # Crop the pad ROI
         roi = strip_img[y1:y2, x1:x2]
         
@@ -99,7 +100,8 @@ def segment_pads(strip_img):
         pads.append({
             "parameter": parameter,
             "roi": roi,
-            "mask": mask
+            "mask": mask,
+            "yolo_confidence": yolo_conf
         })
     
     if not pads:
@@ -118,13 +120,10 @@ def extract_lab_color(pad_data, min_pixels=500):
     if len(valid_pixels) < min_pixels:
         return None, "low_pixels"
 
-    #Convert valid pixels to LAB
     valid_lab = cv2.cvtColor(valid_pixels.reshape(-1, 1, 3), cv2.COLOR_BGR2LAB).reshape(-1, 3)
 
-    #Median
     median_lab = np.median(valid_lab, axis=0)
 
-    # variance check
     std_lab = np.std(valid_lab, axis=0)
     if np.any(std_lab > 30):  # tune as needed
         return None, "high_variance"
@@ -134,15 +133,17 @@ def extract_lab_color(pad_data, min_pixels=500):
 # 4. COLOR → BIOMARKER ESTIMATION
 
 def load_reference_chart(csv_path):
-    df = pd.read_csv(csv_path, header=None, names=['parameter', 'filename', 'R', 'G', 'B', 'range', 'value'])
+    df = pd.read_csv(csv_path, skiprows=1, names=['parameter', 'filename', 'R', 'G', 'B', 'range', 'value', 'normal_range', 'status'])
     refs = {}
     for param in PAD_ORDER:
         subset = df[df["parameter"] == param]
         lab_list = []
-        for _, row in subset.iterrows():
+        for idx, row in subset.iterrows():
             rgb = np.uint8([[ [row["R"], row["G"], row["B"]] ]])
             lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2LAB)[0][0]
-            lab_list.append((lab.astype(float), row["value"]))
+            normal_range_val = row.get("normal_range", "N/A")
+            status_val = row.get("status", "Unknown")
+            lab_list.append((lab.astype(float), row["value"], normal_range_val, status_val))
         refs[param] = lab_list
     return refs
 
@@ -150,20 +151,20 @@ REFERENCE_CHART = load_reference_chart(CSV_PATH)
 
 def estimate_biomarker(median_lab, parameter):
     if parameter not in REFERENCE_CHART or not REFERENCE_CHART[parameter]:
-        return "unknown_param", 0.0
+        return "unknown_param", 0.0, "N/A", "Unknown"
 
     refs = REFERENCE_CHART[parameter]
     distances = []
-    for ref_lab, value in refs:
+    for ref_lab, value, normal_range, status in refs:
         delta_e = np.sqrt(np.sum((median_lab - ref_lab)**2))
-        distances.append((delta_e, value))
+        distances.append((delta_e, value, normal_range, status))
 
-    min_dist, best_value = min(distances, key=lambda x: x[0])
+    min_dist, best_value, best_normal_range, best_status = min(distances, key=lambda x: x[0])
 
     if min_dist > DELTA_E_THRESHOLD:
-        return f"{best_value} (unclear)", min_dist
+        return f"{best_value} (unclear)", min_dist, best_normal_range, best_status
 
-    return best_value, min_dist
+    return best_value, min_dist, best_normal_range, best_status
 
 #DEBUG: SAVE PARAMETER CROPS
 
@@ -214,23 +215,33 @@ def analyze_urine_strip(image_path, save_debug=True):
     results = []
     for pad in pads:
         lab_color, status = extract_lab_color(pad)
+        # Get YOLO confidence from pad, or None if not available
+        yolo_conf = pad.get("yolo_confidence", None)
+        
         if status != "good":
             results.append({
                 "parameter": pad["parameter"],
                 "value": "Rejected",
                 "reason": status,
-                "confidence": "low"
+                "delta_e": None,
+                "yolo_confidence": yolo_conf,
+                "color_confidence": "low",
+                "normal_range": "N/A",
+                "status": "Unknown"
             })
             continue
 
-        value, dist = estimate_biomarker(lab_color, pad["parameter"])
-        confidence = "high" if dist < DELTA_E_THRESHOLD / 2 else "medium" if dist < DELTA_E_THRESHOLD else "low"
+        value, dist, normal_range, status_val = estimate_biomarker(lab_color, pad["parameter"])
+        color_confidence = "high" if dist < DELTA_E_THRESHOLD / 2 else "medium" if dist < DELTA_E_THRESHOLD else "low"
 
         results.append({
             "parameter": pad["parameter"],
             "value": value,
             "delta_e": round(dist, 2),
-            "confidence": confidence
+            "yolo_confidence": yolo_conf,
+            "color_confidence": color_confidence,
+            "normal_range": normal_range,
+            "status": status_val
         })
 
     return results

@@ -5,6 +5,7 @@ const loadingIndicator = document.getElementById('loadingIndicator');
 const errorMessage = document.getElementById('errorMessage');
 const resultsSection = document.getElementById('resultsSection');
 const resultsBody = document.getElementById('resultsBody');
+const toggleColumns = document.getElementById('toggleColumns');
 
 //API endpoint
 const API_URL = 'http://localhost:8000';
@@ -80,10 +81,8 @@ function hideResults() {
 }
 
 function displayResults(results) {
-    // Clear previous results
     resultsBody.innerHTML = '';
     
-    // Sort results by parameter order to maintain consistency
     const sortedResults = results.sort((a, b) => {
         const order = [
             "Leukocytes", "Nitrite", "Urobilinogen", "Protein", "pH",
@@ -95,27 +94,42 @@ function displayResults(results) {
     sortedResults.forEach(result => {
         const row = document.createElement('tr');
         
-        // Parameter name
         const paramCell = document.createElement('td');
         paramCell.className = 'parameter-name';
         paramCell.textContent = result.parameter;
         
-        // Value
         const valueCell = document.createElement('td');
         valueCell.textContent = result.value || 'N/A';
         
-        // Confidence badge
-        const confidenceCell = document.createElement('td');
-        const confidenceBadge = document.createElement('span');
-        confidenceBadge.className = `confidence-badge confidence-${result.confidence}`;
-        confidenceBadge.textContent = result.confidence || 'unknown';
-        confidenceCell.appendChild(confidenceBadge);
+        const normalRangeCell = document.createElement('td');
+        normalRangeCell.textContent = result.normal_range || 'N/A';
         
-        // Delta E
+        const statusCell = document.createElement('td');
+        const statusBadge = document.createElement('span');
+        const statusValue = result.status || 'Unknown';
+        statusBadge.className = `status-badge status-${statusValue.toLowerCase()}`;
+        statusBadge.textContent = statusValue;
+        statusCell.appendChild(statusBadge);
+        
+        const confidenceCell = document.createElement('td');
+        confidenceCell.className = 'technical-column confidence-column';
+        
+        if (result.yolo_confidence !== null && result.yolo_confidence !== undefined) {
+            const percentage = Math.round(result.yolo_confidence * 100);
+            confidenceCell.textContent = `${percentage}%`;
+        } else {
+            confidenceCell.textContent = 'N/A';
+        }
+        
         const deltaECell = document.createElement('td');
-        deltaECell.className = 'delta-e';
+        deltaECell.className = 'technical-column';
+        
         if (result.delta_e !== undefined) {
-            deltaECell.textContent = result.delta_e;
+            const deltaEBadge = document.createElement('span');
+            const colorConf = result.color_confidence || 'low';
+            deltaEBadge.className = `confidence-badge confidence-${colorConf}`;
+            deltaEBadge.textContent = result.delta_e;
+            deltaECell.appendChild(deltaEBadge);
         } else if (result.reason) {
             deltaECell.textContent = result.reason;
         } else {
@@ -124,16 +138,35 @@ function displayResults(results) {
         
         row.appendChild(paramCell);
         row.appendChild(valueCell);
+        row.appendChild(normalRangeCell);
+        row.appendChild(statusCell);
         row.appendChild(confidenceCell);
         row.appendChild(deltaECell);
         
         resultsBody.appendChild(row);
     });
     
+    toggleTechnicalColumns();
+    
     showResults();
 }
 
-// Update file label when file is selected
+function toggleTechnicalColumns() {
+    const isChecked = toggleColumns.checked;
+    const technicalColumns = document.querySelectorAll('.technical-column');
+    technicalColumns.forEach(col => {
+        if (isChecked) {
+            col.classList.remove('hidden-column');
+        } else {
+            col.classList.add('hidden-column');
+        }
+    });
+}
+
+if (toggleColumns) {
+    toggleColumns.addEventListener('change', toggleTechnicalColumns);
+}
+
 imageInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {

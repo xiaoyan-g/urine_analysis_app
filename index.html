@@ -36,14 +36,22 @@
 
             <div id="resultsSection" class="results-section hidden">
                 <h2>Analysis Results</h2>
+                <div class="toggle-wrapper">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="toggleColumns" checked>
+                        <span>Show Technical Details (Detection Confidence & Delta E)</span>
+                    </label>
+                </div>
                 <div class="results-table-wrapper">
                     <table id="resultsTable" class="results-table">
                         <thead>
                             <tr>
                                 <th>Parameter</th>
                                 <th>Value</th>
-                                <th>Confidence</th>
-                                <th>Delta E</th>
+                                <th>Normal Range</th>
+                                <th>Status</th>
+                                <th class="technical-column">Detection Confidence</th>
+                                <th class="technical-column">Delta E</th>
                             </tr>
                         </thead>
                         <tbody id="resultsBody">
