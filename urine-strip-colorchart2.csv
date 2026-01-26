@@ -48,8 +48,8 @@ Bilirubin,Bilirubin_0.png,174,148,108,0.01,0 µmol/l,0 µmol/l,Normal
 Bilirubin,Bilirubin_17.png,167,113,67,0.01,17 µmol/l,0 µmol/l,Alert
 Bilirubin,Bilirubin_50.png,151,85,53,0.01,50 µmol/l,0 µmol/l,Alert
 Bilirubin,Bilirubin_100.png,138,65,50,0.01,100 µmol/l,0 µmol/l,Alert
-Calcium,Calcium_1.png,161,123,90,0.01,?1 mmol/l,?1 mmol/l,Normal
-Calcium,Calcium_2.5.png,165,132,122,0.01,2.5 mmol/l,?1 mmol/l,Warning
-Calcium,Calcium_5.png,158,115,115,0.01,5 mmol/l,?1 mmol/l,Alert
-Calcium,Calcium_7.5.png,145,98,105,0.01,7.5 mmol/l,?1 mmol/l,Alert
-Calcium,Calcium_10.png,117,77,96,0.01,10 mmol/l,?1 mmol/l,Alert
+Calcium,Calcium_1.png,161,123,90,0.01,<1 mmol/l,<1 mmol/l,Normal
+Calcium,Calcium_2.5.png,165,132,122,0.01,2.5 mmol/l,<1 mmol/l,Warning
+Calcium,Calcium_5.png,158,115,115,0.01,5 mmol/l,<1 mmol/l,Alert
+Calcium,Calcium_7.5.png,145,98,105,0.01,7.5 mmol/l,<1 mmol/l,Alert
+Calcium,Calcium_10.png,117,77,96,0.01,10 mmol/l,<1 mmol/l,Alert

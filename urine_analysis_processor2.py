@@ -10,20 +10,6 @@ PAD_ORDER = [
     "Blood", "Specific Gravity", "Ketone", "Bilirubin", "Calcium"
 ]
 
-PAD_RELATIVE_STARTS = [
-    0.065,  # Leukocytes
-    0.145,  # Nitrite
-    0.225,  # Urobilinogen
-    0.305,  # Protein
-    0.385,  # pH
-    0.465,  # Blood
-    0.545,  # Specific Gravity
-    0.625,  # Ketone
-    0.705,  # Bilirubin
-    0.785   # Calcium
-]
-PAD_HEIGHT_FRACTION = 0.06  #~8% of total height
-
 DELTA_E_THRESHOLD = 15.0  #Delta_e confuses me
 
 CSV_PATH = "urine-strip-colorchart2.csv" 
@@ -48,7 +34,6 @@ def create_pad_mask(roi):
     _, s, v = cv2.split(hsv)
     
     # Exclude very light pixels (background) and very dark pixels
-    # Include colored regions (sufficient saturation)
     mask = (v > 50) & (v < 200) & (s > 30)
     return (mask * 255).astype(np.uint8)
 
@@ -81,13 +66,12 @@ def segment_pads(strip_img):
             parameter = f"unknown_class_{class_id}"
         pad_detections.append((x1, y1, x2, y2, parameter, yolo_conf))
     
-    # Sort by x-coordinate (left to right)
+    #Sort n crop
     pad_detections.sort(key=lambda d: d[0])
-    
-    # Process each detection: crop, create mask, return formatted dict
+
     pads = []
     for x1, y1, x2, y2, parameter, yolo_conf in pad_detections:
-        # Crop the pad ROI
+        # Crop pad ROI
         roi = strip_img[y1:y2, x1:x2]
         
         # Skip invalid crops
@@ -193,7 +177,6 @@ def save_debug_crops(pads, debug_folder=DEBUG_CROP_FOLDER):
         #Set pixels where mask == 0 to black
         masked_roi[mask == 0] = [0, 0, 0]
         
-        #Masked version
         masked_filename = f"{prefix}masked_{safe_name}.jpg"
         masked_filepath = os.path.join(debug_folder, masked_filename)
         cv2.imwrite(masked_filepath, masked_roi)
@@ -215,7 +198,7 @@ def analyze_urine_strip(image_path, save_debug=True):
     results = []
     for pad in pads:
         lab_color, status = extract_lab_color(pad)
-        # Get YOLO confidence from pad, or None if not available
+        # YOLO confidence from pad or None if not available
         yolo_conf = pad.get("yolo_confidence", None)
         
         if status != "good":
