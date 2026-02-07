@@ -4,24 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Urine Test Strip Analyzer</title>
-    <link rel="stylesheet" href="static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=2">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Urine Test Strip Analyzer</h1>
-            <p class="subtitle">Upload an image of your urine test strip to analyze 10 parameters</p>
+            <img class="banner" src="/static/Strip_Sense_Logo.png" alt="Strip Sense">
+            <p class="subtitle">Upload an image of your urine test strip to analyze parameters!</p>
+            <p class="subtitle">Disclaimer: This is a prototype and the results are not guaranteed to be accurate.</p>
         </header>
 
         <main>
             <div class="upload-section">
                 <form id="uploadForm" enctype="multipart/form-data">
-                    <div class="file-input-wrapper">
+                    <div id="dropZone" class="drop-zone">
                         <input type="file" id="imageInput" name="file" accept="image/*" required>
                         <label for="imageInput" class="file-label">
-                            <span class="file-label-text">Choose Image</span>
+                            <span class="file-label-text">Choose Image or drag & drop</span>
                             <span class="file-label-icon">📷</span>
                         </label>
+                        <div id="imagePreview" class="image-preview hidden">
+                            <img id="previewImg" src="" alt="Preview">
+                        </div>
                     </div>
                     <button type="submit" id="submitBtn" class="submit-btn">Analyze Strip</button>
                 </form>
@@ -36,6 +41,14 @@
 
             <div id="resultsSection" class="results-section hidden">
                 <h2>Analysis Results</h2>
+                <div id="originalImageBox" class="annotated-image-box hidden">
+                    <h3>Original Image</h3>
+                    <img id="originalImage" src="" alt="Original upload">
+                </div>
+                <div id="annotatedImageBox" class="annotated-image-box hidden">
+                    <h3>Detected Pads (with bounding boxes)</h3>
+                    <img id="annotatedImage" src="" alt="Strip with bounding boxes">
+                </div>
                 <div class="toggle-wrapper">
                     <label class="toggle-label">
                         <input type="checkbox" id="toggleColumns" checked>
@@ -63,7 +76,7 @@
         </main>
     </div>
 
-    <script src="static/script.js"></script>
+    <script src="/static/script.js?v=2"></script>
 </body>
 </html>
 

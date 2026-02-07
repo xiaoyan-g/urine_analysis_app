@@ -36,11 +36,12 @@ async def upload_image(file: UploadFile = File(...)):
             temp_path = temp_file.name
         
         #processor
-        results = analyze_urine_strip(temp_path)
+        output = analyze_urine_strip(temp_path)
         
         return JSONResponse(content={
             "success": True,
-            "results": results
+            "results": output["results"],
+            "annotated_image": output["annotated_image"]
         })
     
     except Exception as e:
@@ -53,5 +54,5 @@ async def upload_image(file: UploadFile = File(...)):
 #run the app
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
 
