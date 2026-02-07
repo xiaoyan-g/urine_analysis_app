@@ -6,9 +6,50 @@ const errorMessage = document.getElementById('errorMessage');
 const resultsSection = document.getElementById('resultsSection');
 const resultsBody = document.getElementById('resultsBody');
 const toggleColumns = document.getElementById('toggleColumns');
+const dropZone = document.getElementById('dropZone');
+const imagePreview = document.getElementById('imagePreview');
+const previewImg = document.getElementById('previewImg');
+const annotatedImageBox = document.getElementById('annotatedImageBox');
+const annotatedImage = document.getElementById('annotatedImage');
+const originalImageBox = document.getElementById('originalImageBox');
+const originalImage = document.getElementById('originalImage');
 
 //API endpoint
 const API_URL = 'http://localhost:8000';
+
+// Drag-and-drop handlers
+if (dropZone) {
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        if (files.length && files[0].type.startsWith('image/')) {
+            imageInput.files = files;
+            updatePreview(files[0]);
+        }
+    });
+}
+
+function updatePreview(file) {
+    const labelText = document.querySelector('.file-label-text');
+    if (file) {
+        if (labelText) labelText.textContent = file.name;
+        const url = URL.createObjectURL(file);
+        if (previewImg) previewImg.src = url;
+        if (imagePreview) imagePreview.classList.remove('hidden');
+    } else {
+        if (labelText) labelText.textContent = 'Choose Image or drag & drop';
+        if (previewImg) previewImg.src = '';
+        if (imagePreview) imagePreview.classList.add('hidden');
+    }
+}
 
 uploadForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -39,9 +80,9 @@ uploadForm.addEventListener('submit', async (e) => {
         }
         
         const data = await response.json();
-        
+
         if (data.success && data.results) {
-            displayResults(data.results);
+            displayResults(data.results, data.annotated_image);
         } else {
             throw new Error('Invalid response from server');
         }
@@ -80,7 +121,7 @@ function hideResults() {
     resultsSection.classList.add('hidden');
 }
 
-function displayResults(results) {
+function displayResults(results, annotatedImageB64) {
     resultsBody.innerHTML = '';
     
     const sortedResults = results.sort((a, b) => {
@@ -145,6 +186,20 @@ function displayResults(results) {
         
         resultsBody.appendChild(row);
     });
+
+    if (originalImageBox && originalImage && previewImg && previewImg.src) {
+        originalImage.src = previewImg.src;
+        originalImageBox.classList.remove('hidden');
+    } else {
+        if (originalImageBox) originalImageBox.classList.add('hidden');
+    }
+
+    if (annotatedImageB64 && annotatedImage && annotatedImageBox) {
+        annotatedImage.src = 'data:image/jpeg;base64,' + annotatedImageB64;
+        annotatedImageBox.classList.remove('hidden');
+    } else {
+        if (annotatedImageBox) annotatedImageBox.classList.add('hidden');
+    }
     
     toggleTechnicalColumns();
     
@@ -169,9 +224,6 @@ if (toggleColumns) {
 
 imageInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
-    if (file) {
-        const labelText = document.querySelector('.file-label-text');
-        labelText.textContent = file.name;
-    }
+    updatePreview(file);
 });
 

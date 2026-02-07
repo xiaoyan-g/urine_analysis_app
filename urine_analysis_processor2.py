@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import os
+import base64
 from ultralytics import YOLO
 
 #Configurations n stuff
@@ -57,7 +58,7 @@ def segment_pads(strip_img):
     pad_detections = []
     for box in detections.boxes:
         x1, y1, x2, y2 = map(int, box.xyxy[0])
-        class_id = int(box.cls)
+        class_id = int(box.cls[0])
         # Extract YOLO confidence score
         yolo_conf = float(box.conf[0]) if hasattr(box.conf, '__len__') and len(box.conf) > 0 else float(box.conf)
         if 0 <= class_id < len(PAD_ORDER):
@@ -85,7 +86,8 @@ def segment_pads(strip_img):
             "parameter": parameter,
             "roi": roi,
             "mask": mask,
-            "yolo_confidence": yolo_conf
+            "yolo_confidence": yolo_conf,
+            "box_coords": (x1, y1, x2, y2)
         })
     
     if not pads:
@@ -183,6 +185,19 @@ def save_debug_crops(pads, debug_folder=DEBUG_CROP_FOLDER):
     
     return debug_folder
 
+
+def draw_boxes_on_image(strip_img, pads):
+    """Draw bounding boxes on the original image (no labels). Returns base64-encoded JPEG."""
+    img_copy = strip_img.copy()
+    for pad in pads:
+        coords = pad.get("box_coords")
+        if coords:
+            x1, y1, x2, y2 = coords
+            cv2.rectangle(img_copy, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    _, buffer = cv2.imencode(".jpg", img_copy)
+    return base64.b64encode(buffer).decode("utf-8")
+
+
 #FULL PIPELINE
 
 def analyze_urine_strip(image_path, save_debug=True):
@@ -227,4 +242,5 @@ def analyze_urine_strip(image_path, save_debug=True):
             "status": status_val
         })
 
-    return results
+    annotated_image_b64 = draw_boxes_on_image(strip, pads)
+    return {"results": results, "annotated_image": annotated_image_b64}
