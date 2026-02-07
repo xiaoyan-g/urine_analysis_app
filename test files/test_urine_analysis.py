@@ -7,7 +7,6 @@ import tempfile
 from unittest.mock import Mock, patch, MagicMock
 import sys
 
-# Add parent directory to path to import the module
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from urine_analysis_processor2 import (
     preprocess_image,
@@ -28,7 +27,7 @@ from urine_analysis_processor2 import (
 def sample_image():
     """Create a sample test image."""
     img = np.zeros((100, 200, 3), dtype=np.uint8)
-    img[20:80, 20:180] = [100, 150, 200]  # Add some colored region
+    img[20:80, 20:180] = [100, 150, 200]
     return img
 
 
@@ -44,7 +43,7 @@ def sample_image_path(sample_image, tmp_path):
 def sample_roi():
     """Create a sample ROI with colored pad region."""
     roi = np.zeros((50, 50, 3), dtype=np.uint8)
-    roi[10:40, 10:40] = [120, 140, 160]  # Colored pad region
+    roi[10:40, 10:40] = [120, 140, 160]
     return roi
 
 
